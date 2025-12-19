@@ -20,7 +20,6 @@ const server = new ApolloServer({
   resolvers,
 });
 
-
   const { url } = await startStandaloneServer(server, {
     listen: { port: GRAPHQL_PORT }
   });

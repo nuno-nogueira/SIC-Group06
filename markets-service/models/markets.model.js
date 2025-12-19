@@ -2,7 +2,7 @@ export default (mongoose) => {
   const schema = new mongoose.Schema({
    name: { 
         type: String, 
-        required: [true, 'Fair name cannot be empty!'], 
+        required: [true, 'Market name cannot be empty!'], 
         unique: true
       },
       description: { 
@@ -39,6 +39,6 @@ export default (mongoose) => {
     { timestamps: true }
   );
 
-  const Fair = mongoose.model("Fair", schema);
-  return Fair;
+  const Market = mongoose.model("Market", schema);
+  return Market;
 };

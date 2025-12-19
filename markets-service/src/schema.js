@@ -1,6 +1,6 @@
 const typeDefs = `#graphql
 
-type Fair {
+type Market {
     id: ID!
     name: String!                
     description: String!         
@@ -18,21 +18,23 @@ type Fair {
   }
   type Seller {
     id: ID!
-    name: String!               
-   
+    full_name: String! 
+    description: String
+    avatar: String             
+    alert: String
   }
   type Rating {
     id: ID!
     userId: String!
-    fairId: ID!
+    marketId: ID!
     rating: Float!
   }
   type Query {
-    fairs: [Fair!]!
-    fair(id: ID!): Fair
+    markets: [Market!]!
+    market(id: ID!): Market
   }
   type Mutation {
-    addFair(
+    addMarket(
       name: String!, 
       description: String!, 
       imageUrl: String!, 
@@ -40,9 +42,11 @@ type Fair {
       latitude: Float!, 
       longitude: Float!, 
       openingHours: String!,
-      categories: [String!]!): Fair
+      categories: [String!]!,
+      sellers: [String!]!): Market
+      
 
-    updateFair(
+    updateMarket(
       id: ID!, 
       name: String, 
       description: String, 
@@ -50,12 +54,12 @@ type Fair {
       address: String, 
       latitude: Float, 
       longitude: Float, 
-      openingHours: String,): Fair
+      openingHours: String,): Market
 
-    deleteFair(id: ID!): Boolean 
+    deleteMarket(id: ID!): Boolean 
     
-    addCategoryToFair(fairId: ID!, category: String!): Fair
-    removeCategoryFromFair(fairId: ID!, category: String!): Fair
+    addCategoryToMarket(marketId: ID!, category: String!): Market
+    removeCategoryFromMarket(marketId: ID!, category: String!): Market
   }
 `;
 
