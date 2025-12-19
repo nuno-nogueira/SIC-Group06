@@ -1,74 +1,102 @@
+import logger from '../logger.js';
 //db
-import fairs from '../config/db.js';
+import db from '../models/db.js';
 
 const resolvers = {
     Query: {
-        fairs: () => {
-            console.log(`Getting all fairs`);
-            return fairs
+        fairs: async() => {
+            try {
+                logger.info("Fetching all fairs from database");
+                return await db.Fair.find();
+                
+            } catch (error) {
+                throw new Error("Error fetching fairs");    
+            }
         },
 
-        fair: (_, { id }) => {
-            console.log(`Getting fair with ID ${id}`)
-            return fairs.find(fair => fair.id === parseInt(id))
+        fair: async (_, { id }) => {
+            try {
+                logger.info("Fetching fair by ID: " + id);
+                return await db.Fair.findById(id);
+            } catch (error) {
+                throw new Error("Fair not found");  
+            }
         },
     },
     Mutation: {
-        addFair: (_, args) => {
-            const new_fair = {
-                ...args,
-                id: fairs.length + 1,
-                sellers: [],
-                ratings: []
-            };
-            fairs.push(new_fair);
+        addFair: async (_, args) => {
+            try {
+                logger.info(`Adding new fair...`);
+                const existingFair = await db.Fair.findOne({name: args.name, address: args.address})
+                if (existingFair) {
+                    logger.warn(`Validation failed: Fair '${args.name}' at '${args.address}' already exists.`);
+                    throw new Error("Fair with this name and address already exists.");
+                }
+                const new_fair = await new db.Fair(args).save();
 
-            console.log(`Added a new fair with the ID of ${new_fair.id}`);
-
-            return new_fair;
-        },
-        updateFair: (_, {id,...args} ) => { 
-            const index = fairs.findIndex(f => f.id == id);
-            if (index === -1) {
-                throw new Error(`Fair with ID ${id} not found.`);
+                logger.info(`Fair created successfully with ID: ${new_fair._id}`);
+                return new_fair;
+                
+            } catch (error) {
+                logger.error("Error creating fair: " + error.message);
+                throw new Error("Error creating fair"+error.message);                
             }
-            const updatedFair = {
-                ...fairs[index],  // 1. Pega em TUDO o que já existia na feira antiga
-                ...args           // 2. Substitui APENAS o que veio novo no "args"
-            };
-
-            fairs[index] = updatedFair;
+        },
+        updateFair: async (_, {id,...args} ) => { 
+        try {
+            const updatedFair = await db.Fair.findByIdAndUpdate(id, { $set: args }, { new: true });
+            if (!updatedFair) {
+                    logger.warn(`Fair with ID ${id} not found for update.`);
+                    throw new Error(`Fair with ID ${id} not found.`);
+                }
+            logger.info(`Fair with ID ${id} updated successfully.`);   
             return updatedFair;
+        } catch (error) {
+            logger.error("Error updating fair: " + error.message);
+            throw new Error("Error updating fair: " + error.message);
+        }
         },
-        deleteFair: (_, { id }) => {
-
-            const index = fairs.findIndex(fair => fair.id === parseInt(id));
-            if (index === -1) {
-                throw new Error(`Fair with ID ${id} not found.`);
+        deleteFair: async (_, { id }) => {
+            logger.info(`Deleting fair with ID: ${id}`);
+            try {
+                const deletedFair = await db.Fair.findByIdAndDelete(id);
+                if (!deletedFair) {
+                    logger.info(`Fair with ID ${id} not found for deletion.`);
+                    throw new Error(`Fair with ID ${id} not found.`);
+                }
+                logger.info(`Fair with ID ${id} deleted successfully.`);
+                return true;
+            } catch (error) {
+                logger.error("Error deleting fair: " + error.message);
+                throw new Error("Error deleting fair: " + error.message);
             }
-            fairs.splice(index, 1);
-
-            console.log(`Deleted fair with id ${id}`)
-            return true;
         },
 
-        addCategoryToFair: (_, { fairId, category }) => {
-            const fair = fairs.find(fair => fair.id === parseInt(fairId));
-            if (!fair) {
-                throw new Error(`Fair with ID ${fairId} not found.`);
+        addCategoryToFair: async(_, { fairId, category }) => {
+            try {
+                logger.info(`Adding category '${category}' to fair ID: ${fairId}`); 
+                return await db.Fair.findByIdAndUpdate(
+                    fairId,
+                    { $addToSet: { categories: category } },
+                    { new: true }
+                );
+            } catch (error) {
+                logger.error("Error adding category to fair: " + error.message);
+                throw new Error("Error adding category" + error.message); 
             }
-            if (!fair.categories.includes(category)) {
-                fair.categories.push(category);
-            }
-            return fair;
         },
-        removeCategoryFromFair: (_, { fairId, category }) => {
-            const fair = fairs.find(f => f.id === parseInt(fairId));
-            if (!fair) {
-                throw new Error(`Fair with ID ${fairId} not found.`);
+        removeCategoryFromFair: async (_, { fairId, category }) => {
+            try {
+                logger.info(`Removing category '${category}' from fair ID: ${fairId}`);
+                return await db.Fair.findByIdAndUpdate(
+                    fairId,
+                    { $pull: { categories: category } },
+                    { new: true }
+                );
+            } catch (error) {
+                logger.error("Error removing category from fair: " + error.message);
+                throw new Error("Error removing category"+error.message); 
             }
-            fair.categories = fair.categories.filter(c => c !== category);
-            return fair;
         }
     }};
 

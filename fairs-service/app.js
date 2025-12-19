@@ -1,24 +1,18 @@
 import { ApolloServer } from '@apollo/server';
 import { startStandaloneServer } from '@apollo/server/standalone';
-import pino from 'pino';
 import 'dotenv/config'; 
 
 // IMPORT typeDefs / resolvers
-import typeDefs from './schema.js'; 
-import resolvers from './resolvers.js';
+import typeDefs from './src/schema.js'; 
+import resolvers from './src/resolvers.js';
 
 // Logger
-const logger = pino({
-  transport: {
-    target: "pino-pretty",
-    options: { colorize: true }
-  }
-});
+import logger from './logger.js';
 
 
 
 
-const GRAPHQL_PORT = process.env.GRAPHQL_PORT || 4001;
+const GRAPHQL_PORT = process.env.GRAPHQL_PORT ;
 
 // Create Apollo Server
 const server = new ApolloServer({
@@ -31,4 +25,4 @@ const server = new ApolloServer({
     listen: { port: GRAPHQL_PORT }
   });
 
-  logger.info(`GraphQL Fairs Service running at: ${url}`);
+  logger.info(`GraphQL Markets Service running at: ${url}`);
