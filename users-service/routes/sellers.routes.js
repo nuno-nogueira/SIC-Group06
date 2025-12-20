@@ -6,7 +6,9 @@ const router = express.Router();
 const auth_controller = require('../controllers/auth.controller.js');
 const seller_controller = require('../controllers/sellers.controller.js');
 
-router.get("/:id", auth_controller.authenticateToken, seller_controller.getSellerById);
+router.get("/:id", seller_controller.getSellerById);
+
+// router.get("/:id", auth_controller.authenticateToken, seller_controller.getSellerById);
 
 router.post("/", seller_controller.createSeller);
 

@@ -26,8 +26,6 @@ const testeToken = jwt.sign(
 const server = new ApolloServer({
   typeDefs,
   resolvers,
-  plugins: [logger.loggingPlugin],
-
 });
 
 const { url } = await startStandaloneServer(server, {
