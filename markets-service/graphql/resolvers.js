@@ -1,7 +1,9 @@
-import logger from '../logger.js';
+import logger from '../utils/logger.js';
 import axios from 'axios';
 //db
 import db from '../models/db.js';
+//auth middleware
+import { authorizeRole } from '../middlewares/auth.middleware.js';
 
 const resolvers = {
     Query: {
@@ -28,7 +30,7 @@ const resolvers = {
     Market: {
         //connect to users-service to get sellers info
         sellers: async (market) => {
-            if (!market.sellers || market.sellers.length === 0) return []; 
+            if (!market.sellers || market.sellers.length === 0) return [];
             try {
                 const requests = market.sellers.map(id => axios.get(`http://localhost:3000/users/sellers/${id}`));
                 const responses = await Promise.all(requests);
@@ -44,13 +46,14 @@ const resolvers = {
                     }));
             } catch (error) {
                 logger.error("Error connecting to Users-Service:", error.response?.status || error.message);
-                return []; 
+                return [];
             }
         }
     },
     Mutation: {
-        addMarket: async (_, args) => {
+        addMarket: async (_, args, context) => {
             try {
+                authorizeRole(context.user, 'admin');// Only admin can add markets
                 logger.info(`Adding new market...`);
                 const existingMarket = await db.Market.findOne({ name: args.name, address: args.address })
                 if (existingMarket) {
@@ -69,6 +72,7 @@ const resolvers = {
         },
         updateMarket: async (_, { id, ...args }) => {
             try {
+                authorizeRole(context.user, 'admin');// Only admin can update markets
                 const updatedMarket = await db.Market.findByIdAndUpdate(id, { $set: args }, { new: true });
                 if (!updatedMarket) {
                     logger.warn(`Market with ID ${id} not found for update.`);
@@ -82,6 +86,7 @@ const resolvers = {
             }
         },
         deleteMarket: async (_, { id }) => {
+            authorizeRole(context.user, 'admin');// Only admin can delete markets
             logger.info(`Deleting market with ID: ${id}`);
             try {
                 const deletedMarket = await db.Market.findByIdAndDelete(id);
@@ -99,6 +104,7 @@ const resolvers = {
 
         addCategoryToMarket: async (_, { marketId, category }) => {
             try {
+                authorizeRole(context.user, 'admin');// Only admin can modify categories
                 logger.info(`Adding category '${category}' to market ID: ${marketId}`);
                 return await db.Market.findByIdAndUpdate(
                     marketId,
@@ -112,6 +118,7 @@ const resolvers = {
         },
         removeCategoryFromMarket: async (_, { marketId, category }) => {
             try {
+                authorizeRole(context.user, 'admin');// Only admin can modify categories
                 logger.info(`Removing category '${category}' from market ID: ${marketId}`);
                 return await db.Market.findByIdAndUpdate(
                     marketId,
