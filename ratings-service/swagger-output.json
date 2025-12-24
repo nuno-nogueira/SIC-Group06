@@ -9,15 +9,15 @@
   "basePath": "/",
   "tags": [
     {
-      "name": "Users",
-      "description": "Endpoints related to users"
+      "name": "Ratings",
+      "description": "Endpoints related to ratings management"
     }
   ],
   "schemes": [
     "http"
   ],
   "paths": {
-    "/ratings/ratings": {
+    "/ratings/": {
       "get": {
         "tags": [
           "ratings"
@@ -72,14 +72,14 @@
           "201": {
             "description": "Rating created successfully",
             "schema": {
-              "$ref": "#/definitions/GetRating"
+              "$ref": "#/definitions/PostRating"
             }
           },
           "400": {
             "description": "Invalid data."
           },
           "401": {
-            "description": "Unauthorized"
+            "description": "Unauthorized."
           },
           "403": {
             "description": "Forbidden"
@@ -90,7 +90,7 @@
         }
       }
     },
-    "/ratings/ratings/{id}": {
+    "/ratings/{id}": {
       "get": {
         "tags": [
           "ratings"
@@ -157,7 +157,7 @@
             "description": "Unauthorized"
           },
           "403": {
-            "description": "Forbidden"
+            "description": "Access denied."
           },
           "404": {
             "description": "Rating not found."
@@ -186,14 +186,14 @@
           }
         ],
         "responses": {
-          "200": {
-            "description": "Rating deleted successfully."
+          "204": {
+            "description": "No content"
           },
           "401": {
             "description": "Unauthorized"
           },
           "403": {
-            "description": "Forbidden"
+            "description": "Access denied."
           },
           "404": {
             "description": "Rating not found."
@@ -204,7 +204,7 @@
         }
       }
     },
-    "/ratings/ratings/market/{marketId}": {
+    "/ratings/markets/{id}": {
       "get": {
         "tags": [
           "Ratings"
@@ -212,7 +212,7 @@
         "description": "Endpoint to get all ratings of a specific market",
         "parameters": [
           {
-            "name": "marketId",
+            "name": "id",
             "in": "path",
             "required": true,
             "type": "string"
@@ -246,7 +246,7 @@
         }
       }
     },
-    "/ratings/ratings/user/{userId}": {
+    "/ratings/users/{id}": {
       "get": {
         "tags": [
           "Ratings"
@@ -254,7 +254,7 @@
         "description": "Endpoint to get all ratings of a specific user",
         "parameters": [
           {
-            "name": "userId",
+            "name": "id",
             "in": "path",
             "required": true,
             "type": "string"
@@ -288,7 +288,7 @@
             "description": "Unauthorized"
           },
           "403": {
-            "description": "Forbidden"
+            "description": "Access denied."
           },
           "404": {
             "description": "No ratings found for this user."
@@ -301,35 +301,62 @@
     }
   },
   "definitions": {
-    "GetUser": {
+    "CreateRating": {
       "type": "object",
       "properties": {
-        "id": {
+        "market_id": {
+          "type": "string",
+          "example": "6587f1a2b3c4d5e6f7a8b9c0"
+        },
+        "rating": {
           "type": "number",
-          "example": 123
+          "example": 5
         },
-        "name": {
+        "comment": {
           "type": "string",
-          "example": "Example Name"
-        },
-        "email": {
-          "type": "string",
-          "example": "example@mail.com"
+          "example": "Excelente feira, produtos muito frescos!"
         }
       }
     },
-    "CreateUser": {
+    "GetRating": {
       "type": "object",
       "properties": {
-        "name": {
+        "_id": {
           "type": "string",
-          "example": "Example Name"
+          "example": "6587f1a2b3c4d5e6f7a8b9c0"
         },
-        "email": {
+        "user_id": {
           "type": "string",
-          "example": "example@mail.com"
+          "example": "69317c1d009c3bf3f0e6e464"
+        },
+        "market_id": {
+          "type": "string",
+          "example": "6587f1a2b3c4d5e6f7a8b9c0"
+        },
+        "rating": {
+          "type": "number",
+          "example": 5
+        },
+        "comment": {
+          "type": "string",
+          "example": "Excelente feira, produtos muito frescos!"
+        },
+        "createdAt": {
+          "type": "string",
+          "example": "2023-12-25T10:00:00.000Z"
+        },
+        "updatedAt": {
+          "type": "string",
+          "example": "2023-12-25T10:00:00.000Z"
+        },
+        "__v": {
+          "type": "number",
+          "example": 0
         }
       }
+    },
+    "PostRating": {
+      "$ref": "#/definitions/GetRating"
     }
   }
 }

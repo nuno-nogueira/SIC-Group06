@@ -117,6 +117,7 @@ export const getRatingsByUserId = async (req, res) => {
 
 }
 
+
 export const getRatingsByMarketId = async (req, res) => {
     /*  
         #swagger.tags = ['Ratings'] 
@@ -148,7 +149,10 @@ export const getRatingsByMarketId = async (req, res) => {
 
         return res.status(200).json({
             message: `Ratings for market ${marketId} retrieved successfully.`,
-            data: marketRatings
+            data: {
+                marketRatings,
+                averageRating: calculateRatingAverage(marketRatings),// calculate average rating 
+            }
         });
 
     } catch (error) {
@@ -304,3 +308,11 @@ export const deleteRating = async (req, res) => {
     }
 }
 
+
+const calculateRatingAverage = (ratingsList) => {
+    if (!ratingsList || ratingsList.length === 0) return 0;
+    const sum = ratingsList.reduce((acc, curr) => acc + curr.rating, 0);
+    const avg = sum / ratingsList.length;
+    
+    return Number(avg.toFixed(1)); 
+};
