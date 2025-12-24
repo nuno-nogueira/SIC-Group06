@@ -1,3 +1,5 @@
+import axios from 'axios';
+import 'dotenv/config';
 import logger from '../utils/logger.js';
 import db from '../models/db.js';
 
@@ -89,7 +91,7 @@ export const getRatingsByUserId = async (req, res) => {
 
         logger.info(`GET /ratings/user/${req.params.id} received.`);
 
-        const {id:userId} = req.params;
+        const { id: userId } = req.params;
         logger.info(`Fetching ratings for user ID: ${userId}`);
 
         if (userId !== req.user.id && req.user.role !== "admin") {
@@ -135,7 +137,7 @@ export const getRatingsByMarketId = async (req, res) => {
 
     try {
 
-        logger.info(`GET /ratings/market/${req.params.id} received.`);
+        logger.info(`GET /ratings/markets/${req.params.id} received.`);
 
         const marketId = req.params.id;
 
@@ -190,12 +192,34 @@ export const createRating = async (req, res) => {
 
         const { market_id, rating, comment } = req.body;
         const user_id = req.user.id;
-        logger.info("POST /rating received.");
 
-        if (!market_id || !rating) {
+         if (!market_id || !rating) {
             logger.warn("POST /rating - Data not found.");
             return res.status(400).json({ error: "POST /rating - Data not found. Required fields: market id, rating." });
         }
+
+        //---------------------- VALIDATE MARKET EXISTS ----------------------//
+
+        try {
+            const marketCheck = await axios.post(`http://127.0.0.1:4001/`, {
+                query: `
+                    query {
+                        market(id:"${market_id}") {
+                            id
+                        }
+                    }`,
+            });
+            logger.info("Contacted Market Service to validate market existence 2.");
+
+            if (!marketCheck.data.data.market) {
+                logger.warn(`POST /rating - Market ${market_id} not found.`);
+                return res.status(404).json({ error: `Market ${market_id} not found.` });
+            }
+        } catch (networkError) {
+            logger.error("Could not contact Market Service:", networkError.message);
+            return res.status(503).json({ error: "Unable to verify market. Please try again later.",debug: networkError.message });
+        }
+
 
         const newRating = await db.Rating.create({
             user_id,
@@ -313,6 +337,6 @@ const calculateRatingAverage = (ratingsList) => {
     if (!ratingsList || ratingsList.length === 0) return 0;
     const sum = ratingsList.reduce((acc, curr) => acc + curr.rating, 0);
     const avg = sum / ratingsList.length;
-    
-    return Number(avg.toFixed(1)); 
+
+    return Number(avg.toFixed(1));
 };
