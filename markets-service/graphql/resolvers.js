@@ -46,6 +46,18 @@ const resolvers = {
                 logger.error(`External Service Error (Users): ${error.message} on market ${market._id}`);
                 return [];
             }
+        },
+        //connect to ratings-service to get ratings info
+        ratings: async (rating) => {
+            if (!rating) return null;
+            try {
+                const response = await axios.get(`http://localhost:3004/ratings/markets=${rating.id}`);
+                logger.info(`Fetching ratings for market ${rating.id} from external service...`);
+                return response.data;
+            } catch (error) {
+                logger.error(`External Service Error (Users): ${error.message} on market ${rating.id}`);
+                return [];
+            }
         }
     },
     Mutation: {
@@ -70,7 +82,7 @@ const resolvers = {
                 throw new Error(`Error creating market: ${error.message}`);
             }
         },
-        updateMarket: async (_, { id, ...args },context) => {
+        updateMarket: async (_, { id, ...args }, context) => {
             try {
                 authorizeRole(context.user, 'admin');// Only admin can update markets
                 logger.info(`Admin [${context.user.id}] updating market [${id}]`)
@@ -85,13 +97,13 @@ const resolvers = {
                 throw error;
             }
         },
-        deleteMarket: async (_, { id },context) => {
+        deleteMarket: async (_, { id }, context) => {
             authorizeRole(context.user, 'admin');// Only admin can delete markets
             logger.info(`Admin [${context.user.id}] deleting market [${id}]`);
             try {
                 const deletedMarket = await db.Market.findByIdAndDelete(id);
                 if (!deletedMarket) throw new Error(`Market not found`);
-        
+
                 logger.info(`Market with ID ${id} deleted successfully.`);
                 return true;
             } catch (error) {
@@ -100,7 +112,7 @@ const resolvers = {
             }
         },
 
-        addCategoryToMarket: async (_, { marketId, category },context) => {
+        addCategoryToMarket: async (_, { marketId, category }, context) => {
             try {
                 authorizeRole(context.user, 'admin');// Only admin can modify categories
                 logger.info(`Admin [${context.user.id}] updating category for market [${marketId}]`);
@@ -114,7 +126,7 @@ const resolvers = {
                 throw new Error(`Error adding category + ${error.message}`);
             }
         },
-        removeCategoryFromMarket: async (_, { marketId, category },context) => {
+        removeCategoryFromMarket: async (_, { marketId, category }, context) => {
             try {
                 authorizeRole(context.user, 'admin');// Only admin can modify categories
                 logger.info(`Admin [${context.user.id}] removing category for market [${marketId}]`);
