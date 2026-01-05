@@ -51,9 +51,15 @@ const resolvers = {
         ratings: async (market) => {
             if (!market) return null;
             try {
-                const response = await axios.get(`http://${process.env.HOST}:${process.env.PORT}/ratings/markets=${market.id}`);
+                const response = await axios.get(`http://${process.env.HOST}:${process.env.PORT}/ratings/markets/${market.id}`);
                 logger.info(`Fetching ratings for market ${market.id} from external service...`);
-                return response.data.data.marketRatings;
+
+                const ratingsData = response.data.data.marketRatings;
+
+                return ratingsData.map(rating => ({
+                    ...rating,      
+                    id: rating._id  // Map "_id" to "id" for GraphQL schema
+                }));
             } catch (error) {
                 logger.error(`External Service Error (Users): ${error.message} on market ${market.id}`);
                 return [];
@@ -62,9 +68,10 @@ const resolvers = {
         averageRating: async (market) => {
             if (!market) return null;
             try {
-                const response = await axios.get(`http://${process.env.HOST}:${process.env.PORT}/ratings/markets=${market.id}`);
+                const response = await axios.get(`http://${process.env.HOST}:${process.env.PORT}/ratings/markets/${market.id}`);
                 logger.info(`Fetching ratings for market ${market.id} from external service...`);
                 return response.data.data.averageRating;
+
             } catch (error) {
                 logger.error(`External Service Error (Users): ${error.message} on market ${market.id}`);
                 return 0;
